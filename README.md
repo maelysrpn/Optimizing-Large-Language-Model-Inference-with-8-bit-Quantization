@@ -1,7 +1,5 @@
 # Optimizing-Large-Language-Model-Inference-with-8-bit-Quantization
 
-# Optimizing LLaMA Inference with 8-bit Quantization
-
 ## Project Overview
 This project aims to optimize the inference process of Large Language Models (LLMs), specifically the **LLaMA-2 7B** architecture. 
 The primary goal is to implement and analyze **8-bit quantization** techniques to drastically reduce the model's memory footprint (VRAM) while maintaining text generation quality.
