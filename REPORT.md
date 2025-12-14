@@ -10,8 +10,12 @@ To get Q, K and V, we multiply the input matrix $X$ (representing the entire seq
 
 The raw compatibility scores (logits) resulting from the dot product of $Q$ and $K$ are passed through a Softmax function. This operation normalizes the scores across the sequence, converting them into positive probabilities that sum to 1. This acts as a filter: it highlights the most relevant tokens (high probability) while suppressing irrelevant ones (near-zero probability), creating Attention Weights. It says roughly: take 80% from word 1, 15% from word 2, 3% from word 3, etc.
 Then we multiply these scores by the values of these tokens. The Attention Weights are used to compute a weighted sum of the Value vectors ($V$). This aggregates information from all tokens in the sequence based on their relevance.
+
 $$\text{Output} = \sum (\text{AttentionWeight}_i \times V_i)$$
-The result is a new context-aware vector representation for the current token, enriched with information retrieved from relevant parts of the sequence.14 We get this formula:
+
+The result is a new context-aware vector representation for the current token, enriched with information retrieved from relevant parts of the sequence.
+We get this formula:
+
 $$\text{Attention}(Q, K, V) = \underbrace{\text{Softmax}\left(\frac{Q \cdot K^T}{\sqrt{d_k}}\right)}_{\text{Weights}} \cdot \underbrace{V}_{\text{Values}}$$
 
 ### B.	The Transformer Mechanism (Encoder-Decoder)
