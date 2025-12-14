@@ -28,6 +28,7 @@ What architectural changes are there compared to the Encoder-Decoder?
 -	No Encoder: There is no separate “source” text to encode. The input is simply a prompt or the beginning of the sentence being generated.
 -	No Cross-Attention: Since there is no encoder, the model entirely relies on Self-Attention.
 -	Strict Masking: The attention matrix is modified utilizing a lower-triangular mask. This ensures that for any given token at position $t$, the model can only attend to previous tokens $[1, t]$. The attention scores for tokens $> t$ are set to $-\infty$ (resulting in zero probability after Softmax), effectively "blinding" the model to the future. Here, $Q$ represents the current token $t$ looking for context, while $K, V$ represent the history of tokens $[1, t]$ (including itself).
+
 During the generation phase, the process is auto regressive:
 1.	The model processes the input context.
 2.	It samples the next token based on the probability distribution.
@@ -37,6 +38,7 @@ This cycle repeats until an "End of Sequence" token is generated.
 
 ## 2.	Specificities of the LLaMA Architecture 
 While LLaMA is based on the standard Causal Transformer architecture described above, it introduces three key modifications to improve stability and performance.
+
 -	Pre-Normalization using RMSNorm: Unlike the original Transformer which normalizes the output of each sub-layer (Post-Norm), LLaMA normalizes the input of each layer (Pre-Norm). This architectural change, inspired by GPT-3, significantly improves training stability. Furthermore, instead of the standard LayerNorm function, LLaMA utilizes RMSNorm (Zhang and Sennrich, 2019). RMSNorm simplifies the computation by omitting the mean centering and only re-scaling the values, which saves computational resources without sacrificing performance.
 
 -	SwiGLU Activation Function: In the Feed-Forward Network (FFN) layers, LLaMA replaces the standard ReLU activation function with SwiGLU. Empirical results show that SwiGLU significantly improves the performance of the model
@@ -52,6 +54,7 @@ To optimize the inference of LLaMA, we implement 8-bit quantization. This techni
 Standard Deep Learning models are trained and stored in FP32 (32-bit Floating Point) or FP16.
 -	FP32: Requires 4 bytes per parameter. A 7B model requires $\approx 28$ GB of VRAM.
 -	INT8: Uses 8-bit Integers (1 byte per parameter). A 7B model requires $\approx 7$ GB of VRAM.
+
 Quantization maps the continuous range of floating-point values to a discrete set of integers $[-127, 127]$.
 $$X_{\text{int8}} = \text{round}\left(\frac{X_{\text{fp32}}}{S}\right)$$
 Where $S$ is the scaling factor derived from the absolute maximum value of the tensor.
@@ -71,6 +74,25 @@ o	During matrix multiplication, the results are combined.
 This approach allows the reduction of memory usage by nearly 4x while maintaining inference performance almost identical to the FP16 baseline.
 
 We will implement the 8-bit quantization to see these VRAM improvements. However, we will not be able to compare the quantization with the 32-bit model since the latter is too heavy for the free Colab GPU. 
+
+3.3 The Solution: Vector-wise Quantization & Mixed Precision
+To solve this, we utilize the technique implemented in the bitsandbytes library:
+
+
+Vector-wise Quantization: Instead of one scaling factor for the whole matrix, scaling factors are calculated for each row or column independently, preserving precision.
+
+
+Mixed-Precision Decomposition: 
+
+The algorithm detects dimensions (columns) containing outliers (values exceeding a threshold).
+
+These outlier dimensions are kept in FP16 (16-bit float) to preserve high precision.
+
+These outliers represent only 0.1 % of the dimensions, allowing the quantization to INT8 on the remaining 99.9 % to still allow huge memory gains.
+
+During matrix multiplication, the results are combined.
+
+This approach allows the reduction of memory usage by nearly 4x while maintaining inference performance almost identical to the FP16 baseline.
 
 
 
