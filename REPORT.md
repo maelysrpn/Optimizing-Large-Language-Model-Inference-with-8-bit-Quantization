@@ -1,6 +1,6 @@
-Optimizing Large Language Model Inference with 8-bit Quantization 
-1.	Understanding Causal Transformer Architectures
-A.	The Transformer 
+# Optimizing Large Language Model Inference with 8-bit Quantization 
+## 1.	Understanding Causal Transformer Architectures
+### A.	The Transformer 
 The Transformer appeared in 2017 with the paper Attention Is All You Need (Vaswani and al.). It is based on the Attention mechanism. Attention allows the model to evaluate the importance of the words in a sentence compared to the word it is processing. 
 The first step is to tokenize the text to get numbers (and not strings) and thus be able to make computations. Every token generates 3 vectors: Query (Q), Key (K), and Value (V). 
 To get Q, K and V, we multiply the input matrix $X$ (representing the entire sequence of tokens) by different weight matrices $W_{Q}, W_{K}$ and $W_{V}$
@@ -14,7 +14,7 @@ $$\text{Output} = \sum (\text{AttentionWeight}_i \times V_i)$$
 The result is a new context-aware vector representation for the current token, enriched with information retrieved from relevant parts of the sequence.14 We get this formula:
 $$\text{Attention}(Q, K, V) = \underbrace{\text{Softmax}\left(\frac{Q \cdot K^T}{\sqrt{d_k}}\right)}_{\text{Weights}} \cdot \underbrace{V}_{\text{Values}}$$
 
-B.	The Transformer Mechanism (Encoder-Decoder)
+### B.	The Transformer Mechanism (Encoder-Decoder)
 
 When it was first conceived, the transformer was thought for translation (e.g., English to French). It is composed of two entities: the Encoder and the Decoder. The goal of the Encoder is to analyze the sentence in English, while the Decoder is writing/generating the sentence in French, word by word.
 The Encoder is responsible for processing the entire input sequence. It uses the Self-Attention mechanism we just described to analyze and understand the sentence. It is important to note that the encoder can look at the entirety of the sentence (preceding and succeeding words).
@@ -22,7 +22,7 @@ Following the attention mechanism, the data passes through a Feed-Forward Networ
 The final output of the Encoder is the sequence of context-rich vectors (matrices $K$ and $V$) that represent the semantic meaning of the input.
 The Decoder is responsible for generating the output sequence, one token at a time. The decoder cannot see the future; it only has access to the words it has already generated. It thus uses Masked Self-Attention. It also has access to information from the Encoder through Cross-Attention: the queries $Q$ are the already generated words, while $K$ and $V$ come from the encoder.
 
-C.	Causal Transformer 
+### C.	Causal Transformer 
 Modern LLMs, like GPT or LLaMA, utilize a Decoder-Only architecture instead of Encoder-Decoder.20 They are referred to as Causal Transformers.
 What architectural changes are there compared to the Encoder-Decoder?
 -	No Encoder: There is no separate “source” text to encode. The input is simply a prompt or the beginning of the sentence being generated.
@@ -35,7 +35,7 @@ During the generation phase, the process is auto regressive:
 4.	The new sequence becomes the input for the next step.
 This cycle repeats until an "End of Sequence" token is generated.
 
-2.	Specificities of the LLaMA Architecture 
+## 2.	Specificities of the LLaMA Architecture 
 While LLaMA is based on the standard Causal Transformer architecture described above, it introduces three key modifications to improve stability and performance.
 -	Pre-Normalization using RMSNorm: Unlike the original Transformer which normalizes the output of each sub-layer (Post-Norm), LLaMA normalizes the input of each layer (Pre-Norm). This architectural change, inspired by GPT-3, significantly improves training stability. Furthermore, instead of the standard LayerNorm function, LLaMA utilizes RMSNorm (Zhang and Sennrich, 2019). RMSNorm simplifies the computation by omitting the mean centering and only re-scaling the values, which saves computational resources without sacrificing performance.
 
@@ -45,10 +45,10 @@ While LLaMA is based on the standard Causal Transformer architecture described a
 -	Rotary Positional Embeddings (RoPE): Instead of adding absolute positional vectors to the input (which fixes a word to position 1, 2, 3...), LLaMA uses RoPE. It encodes the position by rotating the Query and Key vectors in space. The angle of rotation corresponds to the position. Thus, the attention mechanism only depends on the relative distance. So, if we have the same sentence but at another position it will be the same processing. This property also allows the model to generalize better to sequence lengths longer than those seen during training (extrapolation).
 
 
-3.	8-bit Quantization
+## 3.	8-bit Quantization
 To optimize the inference of LLaMA, we implement 8-bit quantization. This technique reduces the memory footprint of the model weights and activations, allowing large models to run on consumer hardware with limited VRAM, like the free GPU of Google Colab. 
 
-A.	The concept of Quantization
+### A.	The concept of Quantization
 Standard Deep Learning models are trained and stored in FP32 (32-bit Floating Point) or FP16.
 -	FP32: Requires 4 bytes per parameter. A 7B model requires $\approx 28$ GB of VRAM.
 -	INT8: Uses 8-bit Integers (1 byte per parameter). A 7B model requires $\approx 7$ GB of VRAM.
@@ -56,12 +56,12 @@ Quantization maps the continuous range of floating-point values to a discrete se
 $$X_{\text{int8}} = \text{round}\left(\frac{X_{\text{fp32}}}{S}\right)$$
 Where $S$ is the scaling factor derived from the absolute maximum value of the tensor.
 
-B.	The Challenge: Emergent Features (Outliers)
+### B.	The Challenge: Emergent Features (Outliers)
 Naive quantization often leads to severe performance degradation in Large Language Models.
 As detailed in the paper LLM.int8(): 8-bit Matrix Multiplication for Transformers at Scale (Dettmers et al., 2022), LLMs larger than 6.7B parameters exhibit "emergent features" characterized by extreme outliers in specific feature dimensions.
 These outliers are significantly larger than the rest of the data. Naively scaling the quantization range to accommodate these outliers causes the vast majority of "normal" values to be quantized to zero, destroying the model's information.
 
-C.	The solution: Vector-wise Quantization & Mixed Precision
+### C.	The solution: Vector-wise Quantization & Mixed Precision
 To solve this, we utilize the technique implemented in the bitsandbytes library:
 -	Vector-wise Quantization: Instead of one scaling factor for the whole matrix, scaling factors are calculated for each row or column independently, preserving precision.
 -	Mixed-Precision Decomposition:
