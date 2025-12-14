@@ -68,31 +68,17 @@ These outliers are significantly larger than the rest of the data. Naively scali
 To solve this, we utilize the technique implemented in the bitsandbytes library:
 -	Vector-wise Quantization: Instead of one scaling factor for the whole matrix, scaling factors are calculated for each row or column independently, preserving precision.
 -	Mixed-Precision Decomposition:
-o	The algorithm detects dimensions (columns) containing outliers (values exceeding a threshold).
-o	These outlier dimensions are kept in FP16 (16-bit float) to preserve high precision. These outliers represent only 0.1 % of the dimensions, allowing the quantization to INT8 on the remaining 99.9 % to still allow huge memory gains
-o	During matrix multiplication, the results are combined.
+
+  o	The algorithm detects dimensions (columns) containing outliers (values exceeding a threshold).
+  
+  o	These outlier dimensions are kept in FP16 (16-bit float) to preserve high precision. These outliers represent only 0.1 % of the dimensions, allowing the quantization to INT8 on the remaining 99.9 % to still allow huge memory gains
+  
+  o	During matrix multiplication, the results are combined.
 This approach allows the reduction of memory usage by nearly 4x while maintaining inference performance almost identical to the FP16 baseline.
 
 We will implement the 8-bit quantization to see these VRAM improvements. However, we will not be able to compare the quantization with the 32-bit model since the latter is too heavy for the free Colab GPU. 
 
-3.3 The Solution: Vector-wise Quantization & Mixed Precision
-To solve this, we utilize the technique implemented in the bitsandbytes library:
 
-
-Vector-wise Quantization: Instead of one scaling factor for the whole matrix, scaling factors are calculated for each row or column independently, preserving precision.
-
-
-Mixed-Precision Decomposition: 
-
-The algorithm detects dimensions (columns) containing outliers (values exceeding a threshold).
-
-These outlier dimensions are kept in FP16 (16-bit float) to preserve high precision.
-
-These outliers represent only 0.1 % of the dimensions, allowing the quantization to INT8 on the remaining 99.9 % to still allow huge memory gains.
-
-During matrix multiplication, the results are combined.
-
-This approach allows the reduction of memory usage by nearly 4x while maintaining inference performance almost identical to the FP16 baseline.
 
 
 
