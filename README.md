@@ -1,15 +1,15 @@
-# Optimizing-Large-Language-Model-Inference-with-8-bit-Quantization
+# Optimizing Large Language Model Inference with 8 bit Quantization
 
 ## Project Overview
 This project aims to optimize the inference process of Large Language Models (LLMs), specifically the **LLaMA-2 7B** architecture. 
 The primary goal is to implement and analyze **8-bit quantization** techniques to drastically reduce the model's memory footprint (VRAM) while maintaining text generation quality.
 
-This work relies on the `transformers` ecosystem and the `bitsandbytes` library, implementing the vector-wise quantization strategy described in the *LLM.int8()* paper.
+This work relies on the transformers ecosystem and the bitsandbytes library, implementing the vector-wise quantization strategy described in the *LLM.int8()* paper.
 
 ## Objectives
 1.  **Understand** the Causal Transformer architecture and LLaMA specificities (RoPE, RMSNorm, SwiGLU).
 2.  **Implement** 8-bit quantization using mixed-precision decomposition.
-3.  **Benchmark** the performance: compare the quantized model against the FP16 baseline in terms of Memory, Latency, and Quality.
+3.  **Benchmark** the performance: compare the quantized model against the **FP16** baseline in terms of Memory, Latency, and Quality.
 
 ## Methodology
 
